@@ -145,7 +145,7 @@
               <th>PID</th>
               <th>Arrival Time</th>
               <th>Burst Time</th>
-              <th>Wating</th>
+              <th>Waiting</th>
               <th>Response</th>
               <th>Turnaround</th>
             </tr>
@@ -162,7 +162,6 @@
           </tbody>
         </table>
       </div>
-
 
       <div id="rrSummaryMetrics" style="display:none; margin-top: 28px;">
         <div class="stats-bar">
@@ -198,7 +197,7 @@
               <th>Priority</th>
               <th>Arrival Time</th>
               <th>Burst Time</th>
-              <th>Wating</th>
+              <th>Waiting</th>
               <th>Response</th>
               <th>Turnaround</th>
             </tr>
@@ -215,7 +214,6 @@
           </tbody>
         </table>
       </div>
-
 
       <div id="prSummaryMetrics" style="display:none; margin-top: 28px;">
         <div class="stats-bar">
@@ -397,54 +395,6 @@
       showToast('✓ Both Algorithms Executed!');
     }
 
-    const COMPARISON_STORAGE_KEY = "osSchedulerComparisonData";
-
-    function saveComparisonData(rrResult, prResult, quantum) {
-      const payload = buildComparisonPayload(rrResult, prResult, quantum);
-      localStorage.setItem(COMPARISON_STORAGE_KEY, JSON.stringify(payload));
-    }
-
-    function openComparisonAnalysis() {
-      const saved = localStorage.getItem(COMPARISON_STORAGE_KEY);
-      if (!saved) return showToast('Run simulation first', true);
-      window.location.href = "comparison.html";
-    }
-
-    function buildComparisonPayload(rrResult, prResult, quantum) {
-      return {
-        savedAt: new Date().toISOString(),
-        quantum,
-        processes: processes.map(p => ({ ...p })),
-        roundRobin: enrichAlgorithmData(rrResult),
-        priority: enrichAlgorithmData(prResult)
-      };
-    }
-
-    function enrichAlgorithmData(result) {
-      const totalBurst = processes.reduce((sum, p) => sum + Number(p.burst), 0);
-      const firstArrival = Math.min(...processes.map(p => Number(p.arrival)));
-      const totalCompletionTime = result.gantt.length ? Math.max(...result.gantt.map(slot => slot.end)) : 0;
-      const elapsed = Math.max(totalCompletionTime - firstArrival, 1);
-      const averages = calculateAverages(result.metrics);
-
-      return {
-        metrics: result.metrics,
-        gantt: result.gantt,
-        averages,
-        executionOrder: result.gantt.map(slot => slot.pid),
-        totalCompletionTime,
-        cpuUtilization: (totalBurst / elapsed) * 100,
-        throughput: result.metrics.length / elapsed,
-        starvation: detectStarvation(result.metrics)
-      };
-    }
-
-    function detectStarvation(metrics) {
-      const avgWaiting = metrics.reduce((sum, p) => sum + p.wt, 0) / metrics.length;
-      const threshold = Math.max(avgWaiting * 1.75, avgWaiting + 5);
-      return metrics.filter(p => p.wt > threshold);
-    }
-
 
     function renderGanttCharts(rrGantt, prGantt) {
       document.getElementById("ganttCard").style.display = "block";
@@ -511,18 +461,11 @@
       return colors[hash];
     }
 
-
     function displayResults(result, type, processes) {
       let tbody = document.getElementById(type + "ResultsBody");
       tbody.innerHTML = "";
 
-      let totalWT = 0, totalTAT = 0, totalRT = 0;
-
       result.metrics.forEach((p, index) => {
-        totalWT += p.wt;
-        totalTAT += p.tat;
-        totalRT += p.rt;
-
         let row = `
             <tr>
                 <td>${index + 1}</td>
@@ -538,15 +481,11 @@
         tbody.innerHTML += row;
       });
 
-      let n = result.metrics.length;
+      let averages = calculateAverages(result.metrics);
 
-      let avgWT = (totalWT / n).toFixed(2);
-      let avgTAT = (totalTAT / n).toFixed(2);
-      let avgRT = (totalRT / n).toFixed(2);
-
-      document.getElementById(type + "AvgWT").innerText = avgWT;
-      document.getElementById(type + "AvgTAT").innerText = avgTAT;
-      document.getElementById(type + "AvgRT").innerText = avgRT;
+      document.getElementById(type + "AvgWT").innerText = averages.avgWT.toFixed(2);
+      document.getElementById(type + "AvgTAT").innerText = averages.avgTAT.toFixed(2);
+      document.getElementById(type + "AvgRT").innerText = averages.avgRT.toFixed(2);
 
       document.getElementById(type + "SummaryMetrics").style.display = "block";
     }
