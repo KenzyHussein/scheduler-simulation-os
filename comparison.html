@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scheduling Comparison Analysis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="comparison.css" />
+</head>
+
+<body>
+  <header>
+    <div class="logo-icon">OS</div>
+    <div>
+      <h1>Scheduling <span>Comparison Analysis</span></h1>
+      <div class="subtitle">Compare fairness, urgency, starvation risk, and scheduling performance.</div>
+    </div>
+  </header>
+
+  <main id="comparisonApp">
+    <section class="card comparison-alert" id="emptyState" style="display:none;">
+      <div class="card-title">No Simulation Data</div>
+      <div class="empty">
+        <div class="icon">!</div>
+        Run a simulation first, then open this analysis dashboard.
+      </div>
+      <button class="btn-add" onclick="window.location.href='os_scheduler.html'">Back To Scheduler</button>
+    </section>
+
+    <section class="comparison-shell" id="dashboard" style="display:none;">
+      <div class="comparison-actions">
+        <button class="btn-clear" onclick="window.location.href='os_scheduler.html'">Back To Scheduler</button>
+        <div class="run-stamp" id="runStamp">Latest simulation</div>
+      </div>
+
+      <section class="metric-card-grid" id="metricCards"></section>
+
+      <section class="card">
+        <div class="card-title">Fairness Versus Urgency</div>
+        <div class="analysis-grid">
+          <article class="analysis-panel">
+            <h2>Round Robin Fairness</h2>
+            <p id="rrFairnessText"></p>
+            <div class="execution-order" id="rrOrder"></div>
+          </article>
+
+          <article class="analysis-panel">
+            <h2>Priority Urgency</h2>
+            <p id="priorityUrgencyText"></p>
+            <div class="execution-order" id="prOrder"></div>
+          </article>
+        </div>
+
+        <div class="insight-strip" id="dynamicInsights"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-title">Starvation And Balance Detection</div>
+        <div class="risk-grid">
+          <div class="risk-panel" id="starvationPanel"></div>
+          <div class="risk-panel" id="balancePanel"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-title">Metric Distribution</div>
+        <div class="chart-stack">
+          <div class="chart-panel">
+            <div class="chart-heading">Waiting Time</div>
+            <div id="wtChart"></div>
+          </div>
+          <div class="chart-panel">
+            <div class="chart-heading">Turnaround Time</div>
+            <div id="tatChart"></div>
+          </div>
+          <div class="chart-panel">
+            <div class="chart-heading">Response Time</div>
+            <div id="rtChart"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-title">Timeline Visualization</div>
+        <div class="gantt-grid comparison-timelines">
+          <section class="gantt-panel">
+            <div class="gantt-header">
+              <span>Round Robin Timeline</span>
+              <small id="rrGanttTotal">Total time: 0 ms</small>
+            </div>
+            <div class="gantt-stage" id="rrGanttChart"></div>
+          </section>
+
+          <section class="gantt-panel">
+            <div class="gantt-header">
+              <span>Priority Timeline</span>
+              <small id="prGanttTotal">Total time: 0 ms</small>
+            </div>
+            <div class="gantt-stage" id="prGanttChart"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-title">Process Metrics</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>PID</th>
+                <th>Priority</th>
+                <th>RR WT</th>
+                <th>Priority WT</th>
+                <th>RR TAT</th>
+                <th>Priority TAT</th>
+                <th>RR RT</th>
+                <th>Priority RT</th>
+              </tr>
+            </thead>
+            <tbody id="processComparisonRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="comparison.js"></script>
+</body>
+
+</html>

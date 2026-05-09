@@ -1,12 +1,11 @@
 // 1. Round Robin Logic
-
 function runRoundRobin(processes, quantum) {
     let currentTime = 0;
     let completed = 0;
     let n = processes.length;
     let readyQueue = [];
     let ganttChart = [];
-
+    
     let pState = processes.map(p => ({
         pid: p.pid,
         arrivalTime: parseInt(p.arrival),
@@ -75,7 +74,6 @@ function runRoundRobin(processes, quantum) {
 }
 
 // 2. Preemptive Priority Logic
-
 function runPriority(processes) {
     let n = processes.length;
     let pState = processes.map(p => ({
