@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OS Scheduler — Process Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header>
+    <div class="logo-icon">OS</div>
+    <div>
+      <h1>OS <span>Scheduler</span></h1>
+      <div class="subtitle">CPU Scheduling Simulator — Process Manager</div>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="card-title">Add New Process</div>
+
+    <div class="quantum-display">
+      <span class="quantum-label">Time Quantum (ms)</span>
+      <input type="number" id="quantumInput" min="1" max="100" value="3"
+        style="width:80px; padding:6px 10px; font-size:16px; text-align:center;" />
+      <span class="quantum-note">Used by Round Robin algorithm</span>
+    </div>
+
+    <div class="input-grid">
+      <div class="field">
+        <label>Process ID</label>
+        <input type="text" id="pid" placeholder="e.g. P5" maxlength="6" />
+      </div>
+      <div class="field">
+        <label>Arrival Time</label>
+        <input type="number" id="arrival" placeholder="0" min="0" />
+      </div>
+      <div class="field">
+        <label>Burst Time</label>
+        <input type="number" id="burst" placeholder="1" min="1" />
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <input type="number" id="priority" placeholder="1 = highest" min="1" />
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-add" onclick="addProcess()">＋ Add Process</button>
+      <button class="btn-clear" onclick="clearAll()">✕ Clear All</button>
+      <button class="btn-export" onclick="exportJSON()">↓ Export JSON</button>
+      <button class="btn-add" style="background: var(--accent3); color: #000;" onclick="startSimulation()">▶ Run
+        Simulation</button>
+    </div>
+  </div>
+
+  <div class="card" id="statsCard" style="display:none;">
+    <div class="card-title">Summary</div>
+    <div class="stats-bar">
+      <div class="stat-box">
+        <div class="stat-label">Total Processes</div>
+        <div class="stat-value sv-cyan" id="statTotal">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Avg Burst Time</div>
+        <div class="stat-value sv-yellow" id="statAvgBurst">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Total CPU Work</div>
+        <div class="stat-value sv-green" id="statTotalBurst">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Time Quantum</div>
+        <div class="stat-value sv-cyan" id="statQuantum">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Process Table</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>PID</th>
+            <th>Arrival Time</th>
+            <th>Burst Time</th>
+            <th>Priority</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="processTableBody">
+          <tr>
+            <td colspan="6">
+              <div class="empty">
+                <div class="icon">⬡</div>
+                No processes added yet. Fill the form above to begin.
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="ganttCard" style="display:none;">
+    <div class="card-title">Gantt Chart Visualization</div>
+    <div class="gantt-grid">
+      <section class="gantt-panel">
+        <div class="gantt-header">
+          <span>Round Robin</span>
+          <small id="rrGanttTotal">Total time: 0 ms</small>
+        </div>
+        <div class="gantt-stage" id="rrGanttChart">
+          <div class="gantt-empty">Run a simulation to see the RR chart.</div>
+        </div>
+      </section>
+
+      <section class="gantt-panel">
+        <div class="gantt-header">
+          <span>Priority Scheduling</span>
+          <small id="prGanttTotal">Total time: 0 ms</small>
+        </div>
+        <div class="gantt-stage" id="prGanttChart">
+          <div class="gantt-empty">Run a simulation to see the Priority chart.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-title">Round Robin Results</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>PID</th>
+              <th>Arrival Time</th>
+              <th>Burst Time</th>
+              <th>Wating</th>
+              <th>Response</th>
+              <th>Turnaround</th>
+            </tr>
+          </thead>
+          <tbody id="rrResultsBody">
+            <tr>
+              <td colspan="7">
+                <div class="empty">
+                  <div class="icon">⬡</div>
+                  Run a simulation to see results here.
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+
+      <div id="rrSummaryMetrics" style="display:none; margin-top: 28px;">
+        <div class="stats-bar">
+          <div class="stat-box">
+            <div class="stat-label">Avg Waiting Time</div>
+            <div class="stat-value sv-red" id="rrAvgWT">—</div>
+            <div class="stat-unit">ms</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Avg Turnaround Time</div>
+            <div class="stat-value sv-yellow" id="rrAvgTAT">—</div>
+            <div class="stat-unit">ms</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Avg Response Time</div>
+            <div class="stat-value sv-cyan" id="rrAvgRT">—</div>
+            <div class="stat-unit">ms</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-title">Priority Scheduling Results</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>PID</th>
+              <th>Priority</th>
+              <th>Arrival Time</th>
+              <th>Burst Time</th>
+              <th>Wating</th>
+              <th>Response</th>
+              <th>Turnaround</th>
+            </tr>
+          </thead>
+          <tbody id="prResultsBody">
+            <tr>
+              <td colspan="8">
+                <div class="empty">
+                  <div class="icon">⬡</div>
+                  Run a simulation to see results here.
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+
+      <div id="prSummaryMetrics" style="display:none; margin-top: 28px;">
+        <div class="stats-bar">
+          <div class="stat-box">
+            <div class="stat-label">Avg Waiting Time</div>
+            <div class="stat-value sv-red" id="prAvgWT">—</div>
+            <div class="stat-unit">ms</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Avg Turnaround Time</div>
+            <div class="stat-value sv-yellow" id="prAvgTAT">—</div>
+            <div class="stat-unit">ms</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Avg Response Time</div>
+            <div class="stat-value sv-cyan" id="prAvgRT">—</div>
+            <div class="stat-unit">ms</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    let processes = [];
+
+    function getPidClass(p) {
+      if (p <= 2) return 'p-high';
+      if (p <= 4) return 'p-med';
+      return 'p-low';
+    }
+
+    function addProcess() {
+      const pidVal = document.getElementById('pid').value.trim();
+      const arrivalVal = document.getElementById('arrival').value;
+      const burstVal = document.getElementById('burst').value;
+      const priorityVal = document.getElementById('priority').value;
+      const quantum = document.getElementById('quantumInput').value;
+
+      // Validation
+      if (!pidVal) return showToast('⚠ Process ID is required', true);
+      if (processes.find(p => p.pid === pidVal)) return showToast('⚠ PID already exists', true);
+      if (arrivalVal === '' || parseInt(arrivalVal) < 0) return showToast('⚠ Enter a valid Arrival Time', true);
+      if (!burstVal || parseInt(burstVal) < 1) return showToast('⚠ Burst Time must be ≥ 1', true);
+      if (!priorityVal || parseInt(priorityVal) < 1) return showToast('⚠ Priority must be ≥ 1', true);
+      if (!quantum || parseInt(quantum) < 1) return showToast('⚠ Time Quantum must be ≥ 1', true);
+
+      const process = {
+        pid: pidVal,
+        arrival: parseInt(arrivalVal),
+        burst: parseInt(burstVal),
+        priority: parseInt(priorityVal),
+        quantum: parseInt(quantum)
+      };
+
+      processes.push(process);
+      renderTable();
+      updateStats();
+      clearInputs();
+      showToast(`✓ Process ${pidVal} added`);
+
+      const match = pidVal.match(/^([A-Za-z]+)(\d+)$/);
+      if (match) {
+        document.getElementById('pid').value = match[1] + (parseInt(match[2]) + 1);
+      }
+    }
+
+    function deleteProcess(index) {
+      processes.splice(index, 1);
+      renderTable();
+      updateStats();
+      showToast('Process removed');
+    }
+
+    function clearAll() {
+      if (processes.length === 0) return;
+      processes = [];
+      renderTable();
+      updateStats();
+      showToast('All processes cleared');
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('processTableBody');
+      if (processes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6">
+        <div class="empty"><div class="icon">⬡</div>No processes added yet. Fill the form above to begin.</div>
+      </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = processes.map((p, i) => `
+      <tr>
+        <td style="color:var(--muted); font-size:12px;">${i + 1}</td>
+        <td class="pid-cell">${p.pid}</td>
+        <td>${p.arrival}</td>
+        <td>${p.burst}</td>
+        <td><span class="priority-badge ${getPidClass(p.priority)}">${p.priority}</span></td>
+        <td><button class="del-btn" onclick="deleteProcess(${i})">✕ Del</button></td>
+      </tr>
+    `).join('');
+    }
+
+    function updateStats() {
+      const card = document.getElementById('statsCard');
+      if (processes.length === 0) { card.style.display = 'none'; return; }
+      card.style.display = 'block';
+
+      const total = processes.length;
+      const totalBurst = processes.reduce((s, p) => s + p.burst, 0);
+      const avgBurst = (totalBurst / total).toFixed(1);
+      const quantum = document.getElementById('quantumInput').value;
+
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statAvgBurst').textContent = avgBurst;
+      document.getElementById('statTotalBurst').textContent = totalBurst;
+      document.getElementById('statQuantum').textContent = quantum + ' ms';
+    }
+
+    function clearInputs() {
+      ['arrival', 'burst', 'priority'].forEach(id => document.getElementById(id).value = '');
+    }
+
+    function exportJSON() {
+      if (processes.length === 0) return showToast('⚠ No processes to export', true);
+      const data = {
+        quantum: parseInt(document.getElementById('quantumInput').value),
+        processes: processes
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'processes.json';
+      a.click();
+      showToast('✓ Exported as processes.json');
+    }
+
+    let toastTimer;
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.background = isError ? '#2b1c1c' : '#1c2b1c';
+      t.style.borderColor = isError ? 'var(--accent2)' : 'var(--accent3)';
+      t.style.color = isError ? 'var(--accent2)' : 'var(--accent3)';
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') addProcess();
+    });
+
+    document.getElementById('quantumInput').addEventListener('input', updateStats);
+
+  </script>
+
+  <script src="logic.js"></script>
+  <script src="metrics.js"></script>
+
+  <script>
+function startSimulation() {
+      if (processes.length === 0) {
+        return showToast('⚠ Add processes first', true);
+      }
+
+      const quantum = parseInt(document.getElementById('quantumInput').value);
+
+      const rrResult = runRoundRobin(processes, quantum);
+      const prResult = runPriority(processes);
+
+      displayResults(rrResult, "rr", processes);
+      displayResults(prResult, "pr", processes);
+      renderGanttCharts(rrResult.gantt, prResult.gantt);
+
+      showToast('✓ Both Algorithms Executed!');
+    }
+
+
+function renderGanttCharts(rrGantt, prGantt) {
+      document.getElementById("ganttCard").style.display = "block";
+      renderGanttChart("rrGanttChart", "rrGanttTotal", rrGantt);
+      renderGanttChart("prGanttChart", "prGanttTotal", prGantt);
+    }
+
+
+function renderGanttChart(chartId, totalId, gantt) {
+      const chart = document.getElementById(chartId);
+      const totalLabel = document.getElementById(totalId);
+
+      if (!gantt || gantt.length === 0) {
+        chart.innerHTML = `<div class="gantt-empty">No chart data available.</div>`;
+        totalLabel.textContent = "Total time: 0 ms";
+        return;
+      }
+
+      const totalTime = Math.max(...gantt.map(slot => slot.end));
+      totalLabel.textContent = `Total time: ${totalTime} ms`;
+
+      const segments = gantt.map(slot => {
+        const duration = Math.max(slot.end - slot.start, 1);
+        const color = getGanttColor(slot.pid);
+
+        return `
+          <div class="gantt-segment" style="flex: ${duration} 0 0; background: ${color};">
+            <strong>${slot.pid}</strong>
+            <span>${slot.start} - ${slot.end}</span>
+          </div>
+        `;
+      }).join("");
+
+      const labels = gantt.map((slot, index) => {
+        const duration = Math.max(slot.end - slot.start, 1);
+        const lastLabel = index === gantt.length - 1 ? `<b>${slot.end}</b>` : "";
+
+        return `
+          <div class="gantt-tick" style="flex: ${duration} 0 0;">
+            <span>${slot.start}</span>
+            ${lastLabel}
+          </div>
+        `;
+      }).join("");
+
+      chart.innerHTML = `
+        <div class="gantt-track">${segments}</div>
+        <div class="gantt-axis">${labels}</div>
+      `;
+    }
+
+
+function getGanttColor(pid) {
+      const colors = [
+        "#2ecc71", "#45b7d1", "#9b5de5", "#f4a261",
+        "#ff6b6b", "#00c2a8", "#ffd166", "#f72585"
+      ];
+      let hash = 0;
+
+      for (let i = 0; i < pid.length; i++) {
+        hash = (hash + pid.charCodeAt(i) * (i + 1)) % colors.length;
+      }
+
+      return colors[hash];
+    }
+
+
+function displayResults(result, type, processes) {
+      let tbody = document.getElementById(type + "ResultsBody");
+      tbody.innerHTML = "";
+
+      let totalWT = 0, totalTAT = 0, totalRT = 0;
+
+      result.metrics.forEach((p, index) => {
+        totalWT += p.wt;
+        totalTAT += p.tat;
+        totalRT += p.rt;
+
+        let row = `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${p.pid}</td>
+                ${type === "pr" ? `<td>${p.priority}</td>` : ""}
+                <td>${processes[index].arrival}</td>
+                <td>${processes[index].burst}</td>
+                <td>${p.wt}</td>
+                <td>${p.rt}</td>
+                <td>${p.tat}</td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+
+      let n = result.metrics.length;
+
+      let avgWT = (totalWT / n).toFixed(2);
+      let avgTAT = (totalTAT / n).toFixed(2);
+      let avgRT = (totalRT / n).toFixed(2);
+
+      document.getElementById(type + "AvgWT").innerText = avgWT;
+      document.getElementById(type + "AvgTAT").innerText = avgTAT;
+      document.getElementById(type + "AvgRT").innerText = avgRT;
+
+      document.getElementById(type + "SummaryMetrics").style.display = "block";
+    }
+</script>
+</body>
+
+</html>
